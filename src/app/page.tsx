@@ -91,13 +91,13 @@ export default function Home() {
               <p className="text-slate-300 font-medium mt-1">Hệ thống quản lý thông minh & tự động</p>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-3 rounded-xl border border-white/20">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-3 rounded-xl border border-white/20 relative z-20">
                 <span className="text-sm font-bold text-white/80">Tháng:</span>
-                <Input
+                <input
                   type="month"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="h-9 border-none bg-white font-bold text-slate-900 w-[150px] rounded-lg cursor-pointer focus-visible:ring-2 focus-visible:ring-white/50"
+                  className="h-9 px-3 rounded-lg bg-white font-bold text-slate-900 border-none outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer w-[160px]"
                 />
               </div>
               <div className="bg-emerald-500/20 backdrop-blur-sm px-6 py-3 rounded-xl border border-emerald-400/30">
