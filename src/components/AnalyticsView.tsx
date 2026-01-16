@@ -7,8 +7,12 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export function AnalyticsView() {
-    const { data, loading } = useAnalytics();
+interface AnalyticsViewProps {
+    selectedMonth: string;
+}
+
+export function AnalyticsView({ selectedMonth }: AnalyticsViewProps) {
+    const { data, loading } = useAnalytics(selectedMonth);
 
     if (loading) {
         return (
@@ -19,8 +23,16 @@ export function AnalyticsView() {
         );
     }
 
+    if (data.length === 0) {
+        return (
+            <div className="bg-white rounded-xl border border-dashed border-slate-300 py-24 text-center">
+                <p className="text-slate-400 font-medium italic">Không có dữ liệu để hiển thị biểu đồ.</p>
+                <p className="text-slate-500 text-sm mt-2">Vui lòng nhập dữ liệu cho các tháng trước.</p>
+            </div>
+        );
+    }
+
     // Transform data for Usage Chart
-    // Expected format: [{ month: 'T11', 'Phòng 1': 100, 'Phòng 2': 120, ... }]
     const usageData = data.map(d => ({
         month: d.monthDisplay,
         'Phòng 1': d.rooms.find(r => r.room_id === 1)?.usage || 0,
@@ -39,7 +51,14 @@ export function AnalyticsView() {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Info Banner */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                    📊 Đang hiển thị dữ liệu <strong>6 tháng</strong> xung quanh tháng <strong>{selectedMonth}</strong>
+                </p>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {/* Electricity Usage Chart */}

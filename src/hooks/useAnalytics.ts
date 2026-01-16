@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { MonthlyBill } from '@/types';
-import { format, subMonths, startOfMonth } from 'date-fns';
+import { format, subMonths } from 'date-fns';
 
 export interface AnalyticsData {
     month: string;
@@ -14,7 +14,7 @@ export interface AnalyticsData {
     totalRevenue: number;
 }
 
-export function useAnalytics() {
+export function useAnalytics(centerMonth?: string) {
     const [data, setData] = useState<AnalyticsData[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -22,10 +22,14 @@ export function useAnalytics() {
         async function fetchAnalytics() {
             setLoading(true);
             try {
-                // Get last 6 months keys
+                // Get 6 months centered around the selected month
+                const baseDate = centerMonth ? new Date(centerMonth + '-01') : new Date();
                 const months = [];
-                for (let i = 0; i < 6; i++) {
-                    months.push(format(subMonths(new Date(), i), 'yyyy-MM'));
+
+                // Get 3 months before and 2 months after the selected month
+                for (let i = 3; i >= -2; i--) {
+                    const monthDate = subMonths(baseDate, i);
+                    months.push(format(monthDate, 'yyyy-MM'));
                 }
 
                 const { data: bills, error } = await supabase
@@ -37,7 +41,7 @@ export function useAnalytics() {
                 if (error) throw error;
 
                 // Group by month
-                const grouped = months.reverse().map(m => {
+                const grouped = months.map(m => {
                     const monthBills = (bills || []).filter(b => b.month_key === m);
 
                     const roomData = [1, 2, 3, 4].map(roomId => {
@@ -53,7 +57,7 @@ export function useAnalytics() {
 
                     return {
                         month: m,
-                        monthDisplay: `T${parseInt(m.split('-')[1])}`,
+                        monthDisplay: `T${parseInt(m.split('-')[1])}/${m.split('-')[0].slice(2)}`,
                         rooms: roomData,
                         totalRevenue
                     };
@@ -68,7 +72,7 @@ export function useAnalytics() {
         }
 
         fetchAnalytics();
-    }, []);
+    }, [centerMonth]);
 
     return { data, loading };
 }
