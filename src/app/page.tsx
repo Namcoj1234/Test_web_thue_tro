@@ -97,7 +97,7 @@ export default function Home() {
                   type="month"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="h-9 border-none bg-white font-bold text-slate-900 w-[150px] rounded-lg"
+                  className="h-9 border-none bg-white font-bold text-slate-900 w-[150px] rounded-lg cursor-pointer focus-visible:ring-2 focus-visible:ring-white/50"
                 />
               </div>
               <div className="bg-emerald-500/20 backdrop-blur-sm px-6 py-3 rounded-xl border border-emerald-400/30">
@@ -207,7 +207,7 @@ export default function Home() {
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-500">Công suất</p>
+                  <p className="text-sm font-medium text-slate-500">Tỉ lệ người ở</p>
                   <p className="text-xl font-bold text-blue-600 mt-1">{occupancyRate.toFixed(0)}%</p>
                   <p className="text-xs text-slate-500 mt-1">{totalOccupants}/8 người</p>
                 </div>
