@@ -182,6 +182,22 @@ export function useMonthlyData() {
         }
     };
 
+    const resetMonthData = async () => {
+        if (!confirm('Bạn có chắc chắn muốn xóa dữ liệu tháng này và tạo lại không?')) return;
+        setLoading(true);
+        try {
+            const billsRef = ref(db, getBillsPath(selectedMonth));
+            await set(billsRef, null); // Delete data
+            // Fetch will trigger regeneration naturally
+            fetchMonthData(selectedMonth);
+        } catch (error) {
+            console.error('Reset failed:', error);
+            alert('Lỗi khi reset: ' + error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Set up real-time listener for live sync across devices
     useEffect(() => {
         setLoading(true);
@@ -217,6 +233,7 @@ export function useMonthlyData() {
             }
         },
         updateAllRates,
+        resetMonthData,
         calculateBill
     };
 }

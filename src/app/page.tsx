@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 export default function Home() {
-  const { selectedMonth, setSelectedMonth, bills, loading, updateBill, updateAllRates, calculateBill } = useMonthlyData();
+  const { selectedMonth, setSelectedMonth, bills, loading, updateBill, updateAllRates, resetMonthData, calculateBill } = useMonthlyData();
   const { data: analyticsData } = useAnalytics(selectedMonth);
   const [selectedBill, setSelectedBill] = useState<MonthlyBill | null>(null);
 
@@ -148,6 +148,14 @@ export default function Home() {
               >
                 <Save className="w-5 h-5 mr-2" />
                 Lưu cấu hình
+              </Button>
+              <Button
+                onClick={resetMonthData}
+                className="bg-red-100 hover:bg-red-200 text-red-700 ml-2"
+                variant="outline"
+                disabled={loading}
+              >
+                Reset Dữ liệu
               </Button>
             </div>
             <p className="text-xs text-slate-500 mt-4 italic">
