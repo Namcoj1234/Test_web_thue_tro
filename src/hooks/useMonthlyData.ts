@@ -3,7 +3,10 @@ import { db, ref, get, set, update, onValue, getBillsPath, getBillPath } from '@
 import { MonthlyBill, BillCalculation, DEFAULT_ELECTRICITY_RATE, DEFAULT_WATER_RATE, DEFAULT_ROOM_RENT } from '@/types';
 
 export function useMonthlyData() {
-    const [selectedMonth, setSelectedMonth] = useState('2025-01');
+    const [selectedMonth, setSelectedMonth] = useState(() => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    });
     const [bills, setBills] = useState<MonthlyBill[]>([]);
     const [loading, setLoading] = useState(false);
 
