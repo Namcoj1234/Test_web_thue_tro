@@ -227,9 +227,9 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {bills.map((bill) => (
+            {bills.map((bill, index) => (
               <RoomCard
-                key={`room-${bill.room_id}`}
+                key={bill.room_id ? `room-${bill.room_id}` : `bill-${index}`}
                 billData={bill}
                 calculation={calculateBill(bill)}
                 onEdit={setSelectedBill}
@@ -253,7 +253,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <LineChart data={usageData} margin={{ top: 5, right: 15, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis dataKey="month" stroke="#64748b" fontSize={10} tickLine={false} />
@@ -276,12 +276,12 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <BarChart data={revenueData} margin={{ top: 5, right: 15, left: 10, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis dataKey="month" stroke="#64748b" fontSize={10} tickLine={false} />
                       <YAxis stroke="#64748b" fontSize={10} tickLine={false} tickFormatter={(v) => `${v / 1000000}tr`} />
-                      <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={{ fontSize: '11px' }} />
+                      <Tooltip formatter={(v: number | undefined) => formatCurrency(v ?? 0)} contentStyle={{ fontSize: '11px' }} />
                       <Bar dataKey="Doanh thu" fill="#0f172a" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -295,14 +295,14 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <PieChart>
                       <Pie
                         data={roomComparisonData}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }: { name?: string; percent?: number }) => `${name ?? ''}: ${((percent ?? 0) * 100).toFixed(0)}%`}
                         outerRadius={70}
                         fill="#8884d8"
                         dataKey="revenue"
@@ -311,7 +311,7 @@ export default function Home() {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                      <Tooltip formatter={(v: number | undefined) => formatCurrency(v ?? 0)} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -324,12 +324,12 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <BarChart data={roomComparisonData} margin={{ top: 5, right: 15, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} />
                       <YAxis stroke="#64748b" fontSize={10} tickLine={false} />
-                      <Tooltip formatter={(v: number) => `${v} kWh`} contentStyle={{ fontSize: '11px' }} />
+                      <Tooltip formatter={(v: number | undefined) => `${v ?? 0} kWh`} contentStyle={{ fontSize: '11px' }} />
                       <Bar dataKey="electricity" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
