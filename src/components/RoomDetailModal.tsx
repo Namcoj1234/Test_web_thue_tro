@@ -40,8 +40,8 @@ export function RoomDetailModal({ isOpen, onClose, bill, onSave }: RoomDetailMod
     const calculated = calculateBill(previewBill);
 
     const handleSave = () => {
-        if (bill.id) {
-            onSave(bill.id, formData);
+        if (bill.room_id) {
+            onSave(bill.room_id, formData);
             onClose();
         }
     };
