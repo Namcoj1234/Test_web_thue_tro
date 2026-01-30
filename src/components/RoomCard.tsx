@@ -49,15 +49,15 @@ export function RoomCard({ billData, calculation, onEdit, onUpdate }: RoomCardPr
                         {roomName}
                     </CardTitle>
                     <div className="flex items-center gap-2">
-                        <div className={`text-xs font-medium px-2 py-1 rounded-full ${isFull ? 'bg-red-100 text-red-700' : occupants > 0 ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
+                        <div className={`text-xs font-medium px-2 py-1 rounded-full ${isFull ? 'bg-red-100 text-red-700' : occupants > 0 ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'
                             }`}>
                             {occupants}/2
                         </div>
                         <button
                             onClick={handleTogglePaid}
                             className={`p-1.5 rounded-full transition-all ${isPaid
-                                    ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                                    : 'bg-slate-200 text-slate-500 hover:bg-slate-300'
+                                ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                                 }`}
                             title={isPaid ? 'Đã thanh toán' : 'Chưa thanh toán'}
                         >
@@ -91,7 +91,7 @@ export function RoomCard({ billData, calculation, onEdit, onUpdate }: RoomCardPr
                         <span className="text-2xl font-extrabold text-emerald-600">{formatMoney(calculation.totalBill)}</span>
                     </div>
                     {occupants > 0 && calculation.perPerson > 0 && (
-                        <div className="text-xs text-slate-500 text-right">
+                        <div className="text-xs text-slate-700 text-right">
                             Mỗi người: <span className="font-semibold text-blue-600">{formatMoney(calculation.perPerson)}</span>
                         </div>
                     )}
@@ -108,8 +108,8 @@ export function RoomCard({ billData, calculation, onEdit, onUpdate }: RoomCardPr
                                 className="text-sm"
                             />
                             <div className="flex gap-2">
-                                <Button onClick={handleSaveNotes} size="sm" className="flex-1 h-8 text-xs">Lưu</Button>
-                                <Button onClick={() => setIsEditingNotes(false)} size="sm" variant="outline" className="flex-1 h-8 text-xs">Hủy</Button>
+                                <Button onClick={handleSaveNotes} className="flex-1 h-8 text-xs">Lưu</Button>
+                                <Button onClick={() => setIsEditingNotes(false)} variant="outline" className="flex-1 h-8 text-xs">Hủy</Button>
                             </div>
                         </div>
                     ) : (

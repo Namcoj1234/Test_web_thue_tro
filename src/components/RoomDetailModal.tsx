@@ -83,7 +83,7 @@ export function RoomDetailModal({ isOpen, onClose, bill, onSave }: RoomDetailMod
                                 type="number"
                                 disabled
                                 value={formData.electricity_old ?? 0}
-                                className="bg-slate-100/50"
+                                className="bg-slate-100 font-semibold text-slate-900 border-slate-300 opacity-100"
                             />
                         </div>
                         <div className="space-y-2">

@@ -158,7 +158,7 @@ export default function Home() {
                 Reset Dữ liệu
               </Button>
             </div>
-            <p className="text-xs text-slate-500 mt-4 italic">
+            <p className="text-xs text-slate-700 mt-4 italic">
               💡 Thay đổi đơn giá sẽ áp dụng cho TẤT CẢ các phòng trong tháng này.
             </p>
           </CardContent>
@@ -170,9 +170,9 @@ export default function Home() {
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-500">Đã thu</p>
+                  <p className="text-sm font-medium text-slate-700">Đã thu</p>
                   <p className="text-xl font-bold text-emerald-600 mt-1">{formatCurrency(paidRevenue)}</p>
-                  <p className="text-xs text-slate-500 mt-1">{bills.filter(b => b.is_paid).length}/4 phòng</p>
+                  <p className="text-xs text-slate-700 mt-1">{bills.filter(b => b.is_paid).length}/4 phòng</p>
                 </div>
                 <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
                   <DollarSign className="w-6 h-6 text-emerald-600" />
@@ -185,9 +185,9 @@ export default function Home() {
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-500">Chưa thu</p>
+                  <p className="text-sm font-medium text-slate-700">Chưa thu</p>
                   <p className="text-xl font-bold text-orange-600 mt-1">{formatCurrency(unpaidRevenue)}</p>
-                  <p className="text-xs text-slate-500 mt-1">{bills.filter(b => !b.is_paid).length}/4 phòng</p>
+                  <p className="text-xs text-slate-700 mt-1">{bills.filter(b => !b.is_paid).length}/4 phòng</p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
                   <AlertCircle className="w-6 h-6 text-orange-600" />
@@ -200,9 +200,9 @@ export default function Home() {
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-500">Điện tiêu thụ</p>
+                  <p className="text-sm font-medium text-slate-700">Điện tiêu thụ</p>
                   <p className="text-xl font-bold text-slate-900 mt-1">{totalElectricity} kWh</p>
-                  <p className="text-xs text-slate-500 mt-1">TB: {(totalElectricity / 4).toFixed(0)} kWh/phòng</p>
+                  <p className="text-xs text-slate-700 mt-1">TB: {(totalElectricity / 4).toFixed(0)} kWh/phòng</p>
                 </div>
                 <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
                   <Zap className="w-6 h-6 text-yellow-600" />
@@ -215,9 +215,9 @@ export default function Home() {
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-500">Tỉ lệ người ở</p>
+                  <p className="text-sm font-medium text-slate-700">Tỉ lệ người ở</p>
                   <p className="text-xl font-bold text-blue-600 mt-1">{occupancyRate.toFixed(0)}%</p>
-                  <p className="text-xs text-slate-500 mt-1">{totalOccupants}/8 người</p>
+                  <p className="text-xs text-slate-700 mt-1">{totalOccupants}/8 người</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                   <Users className="w-6 h-6 text-blue-600" />
@@ -231,7 +231,7 @@ export default function Home() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-900"></div>
-            <span className="text-slate-500 font-medium mt-4">Đang tải dữ liệu...</span>
+            <span className="text-slate-700 font-medium mt-4">Đang tải dữ liệu...</span>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
