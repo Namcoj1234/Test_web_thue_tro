@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { MonthlyBill } from '@/types';
+import { db, ref, get, getBillsPath } from '@/lib/firebase';
+import { MonthlyBill, DEFAULT_ELECTRICITY_RATE, DEFAULT_WATER_RATE, DEFAULT_ROOM_RENT } from '@/types';
 import { format, subMonths } from 'date-fns';
 
 export interface AnalyticsData {
@@ -24,7 +24,7 @@ export function useAnalytics(centerMonth?: string) {
             try {
                 // Get 6 months centered around the selected month
                 const baseDate = centerMonth ? new Date(centerMonth + '-01') : new Date();
-                const months = [];
+                const months: string[] = [];
 
                 // Get 3 months before and 2 months after the selected month
                 for (let i = 3; i >= -2; i--) {
@@ -32,23 +32,32 @@ export function useAnalytics(centerMonth?: string) {
                     months.push(format(monthDate, 'yyyy-MM'));
                 }
 
-                const { data: bills, error } = await supabase
-                    .from('monthly_bills')
-                    .select('*')
-                    .in('month_key', months)
-                    .order('month_key', { ascending: true });
+                // Fetch data for all months from Firebase
+                const allBills: MonthlyBill[] = [];
 
-                if (error) throw error;
+                await Promise.all(months.map(async (month) => {
+                    const billsRef = ref(db, getBillsPath(month));
+                    const snapshot = await get(billsRef);
+
+                    if (snapshot.exists()) {
+                        const monthData = snapshot.val();
+                        Object.values(monthData).forEach((bill: any) => {
+                            allBills.push(bill);
+                        });
+                    }
+                }));
 
                 // Group by month
                 const grouped = months.map(m => {
-                    const monthBills = (bills || []).filter(b => b.month_key === m);
+                    const monthBills = allBills.filter(b => b.month_key === m);
 
                     const roomData = [1, 2, 3, 4].map(roomId => {
                         const bill = monthBills.find(b => b.room_id === roomId);
                         const usage = bill ? Math.max(0, (bill.electricity_new ?? 0) - (bill.electricity_old ?? 0)) : 0;
                         const occupants = bill?.occupants ?? 0;
-                        const revenue = (occupants * 1000000) + (occupants * 80000) + (usage * 5000);
+                        const electricityRate = bill?.electricity_rate ?? DEFAULT_ELECTRICITY_RATE;
+                        const waterRate = bill?.water_rate ?? DEFAULT_WATER_RATE;
+                        const revenue = (occupants * DEFAULT_ROOM_RENT) + (occupants * waterRate) + (usage * electricityRate);
 
                         return { room_id: roomId, usage, revenue };
                     });

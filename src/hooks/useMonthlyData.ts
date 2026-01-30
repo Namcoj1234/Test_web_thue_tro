@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { db, ref, get, set, update, onValue, getBillsPath, getBillPath } from '@/lib/firebase';
 import { MonthlyBill, BillCalculation, DEFAULT_ELECTRICITY_RATE, DEFAULT_WATER_RATE, DEFAULT_ROOM_RENT } from '@/types';
 
 export function useMonthlyData() {
-    const [selectedMonth, setSelectedMonth] = useState('2025-12');
+    const [selectedMonth, setSelectedMonth] = useState('2025-01');
     const [bills, setBills] = useState<MonthlyBill[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -37,71 +37,67 @@ export function useMonthlyData() {
     const fetchMonthData = useCallback(async (month: string) => {
         setLoading(true);
         try {
-            const { data: currentData, error: currentError } = await supabase
-                .from('monthly_bills')
-                .select('*')
-                .eq('month_key', month)
-                .order('room_id');
+            const billsRef = ref(db, getBillsPath(month));
+            const snapshot = await get(billsRef);
 
-            if (currentError) throw currentError;
-
-            if (currentData && currentData.length > 0) {
-                setBills(currentData);
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const billsArray: MonthlyBill[] = Object.values(data);
+                billsArray.sort((a, b) => a.room_id - b.room_id);
+                setBills(billsArray);
                 setLoading(false);
                 return;
             }
 
-            // Auto-seed from previous month
+            // Auto-seed from previous month if no data exists
             const [year, m] = month.split('-').map(Number);
             const prevDate = new Date(year, m - 1 - 1, 1);
             const prevMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
 
-            const { data: prevData, error: prevError } = await supabase
-                .from('monthly_bills')
-                .select('*')
-                .eq('month_key', prevMonthStr)
-                .order('room_id');
+            const prevBillsRef = ref(db, getBillsPath(prevMonthStr));
+            const prevSnapshot = await get(prevBillsRef);
 
-            if (prevError) throw prevError;
+            let newBillsData: Record<string, MonthlyBill> = {};
 
-            let newBillsPayload: any[] = [];
-
-            if (prevData && prevData.length > 0) {
-                // Carry over rates from previous month
-                newBillsPayload = prevData.map(prev => ({
-                    room_id: prev.room_id,
-                    month_key: month,
-                    occupants: prev.occupants,
-                    electricity_old: prev.electricity_new,
-                    electricity_new: 0,
-                    electricity_rate: prev.electricity_rate ?? DEFAULT_ELECTRICITY_RATE,
-                    water_rate: prev.water_rate ?? DEFAULT_WATER_RATE,
-                    is_paid: false,
-                    notes: null
-                }));
+            if (prevSnapshot.exists()) {
+                const prevData = prevSnapshot.val();
+                Object.values(prevData).forEach((prev: any) => {
+                    const newBill: MonthlyBill = {
+                        room_id: prev.room_id,
+                        month_key: month,
+                        occupants: prev.occupants,
+                        electricity_old: prev.electricity_new,
+                        electricity_new: 0,
+                        electricity_rate: prev.electricity_rate ?? DEFAULT_ELECTRICITY_RATE,
+                        water_rate: prev.water_rate ?? DEFAULT_WATER_RATE,
+                        is_paid: false,
+                        notes: undefined
+                    };
+                    newBillsData[`room_${prev.room_id}`] = newBill;
+                });
             } else {
-                newBillsPayload = [1, 2, 3, 4].map(id => ({
-                    room_id: id,
-                    month_key: month,
-                    occupants: 0,
-                    electricity_old: 0,
-                    electricity_new: 0,
-                    electricity_rate: DEFAULT_ELECTRICITY_RATE,
-                    water_rate: DEFAULT_WATER_RATE,
-                    is_paid: false,
-                    notes: null
-                }));
+                // Create empty bills for all 4 rooms
+                [1, 2, 3, 4].forEach(id => {
+                    newBillsData[`room_${id}`] = {
+                        room_id: id,
+                        month_key: month,
+                        occupants: 0,
+                        electricity_old: 0,
+                        electricity_new: 0,
+                        electricity_rate: DEFAULT_ELECTRICITY_RATE,
+                        water_rate: DEFAULT_WATER_RATE,
+                        is_paid: false,
+                        notes: undefined
+                    };
+                });
             }
 
-            const { data: insertedData, error: insertError } = await supabase
-                .from('monthly_bills')
-                .insert(newBillsPayload)
-                .select()
-                .order('room_id');
+            // Save new bills to Firebase
+            await set(ref(db, getBillsPath(month)), newBillsData);
 
-            if (insertError) throw insertError;
-
-            setBills(insertedData || []);
+            const billsArray: MonthlyBill[] = Object.values(newBillsData);
+            billsArray.sort((a, b) => a.room_id - b.room_id);
+            setBills(billsArray);
 
         } catch (err) {
             console.error('Error in fetchMonthData:', err);
@@ -110,37 +106,60 @@ export function useMonthlyData() {
         }
     }, []);
 
-    const updateBill = async (id: number, updates: Partial<MonthlyBill>) => {
-        setBills(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
+    const updateBill = async (roomId: number, updates: Partial<MonthlyBill>) => {
+        // Optimistic update
+        setBills(prev => prev.map(b => b.room_id === roomId ? { ...b, ...updates } : b));
 
-        const { error } = await supabase
-            .from('monthly_bills')
-            .update(updates)
-            .eq('id', id);
-
-        if (error) {
+        try {
+            const billRef = ref(db, getBillPath(selectedMonth, roomId));
+            await update(billRef, updates);
+        } catch (error) {
             console.error('Update failed:', error);
             fetchMonthData(selectedMonth);
         }
     };
 
     const updateAllRates = async (electricity_rate: number, water_rate: number) => {
+        // Optimistic update
         const updates = bills.map(b => ({ ...b, electricity_rate, water_rate }));
         setBills(updates);
 
-        const { error } = await supabase
-            .from('monthly_bills')
-            .update({ electricity_rate, water_rate })
-            .eq('month_key', selectedMonth);
+        try {
+            const billsRef = ref(db, getBillsPath(selectedMonth));
+            const updateData: Record<string, { electricity_rate: number; water_rate: number }> = {};
 
-        if (error) {
+            bills.forEach(bill => {
+                updateData[`room_${bill.room_id}/electricity_rate`] = electricity_rate;
+                updateData[`room_${bill.room_id}/water_rate`] = water_rate;
+            });
+
+            await update(billsRef, updateData);
+        } catch (error) {
             console.error('Bulk update failed:', error);
             fetchMonthData(selectedMonth);
         }
     };
 
+    // Set up real-time listener for live sync across devices
     useEffect(() => {
+        setLoading(true);
+        const billsRef = ref(db, getBillsPath(selectedMonth));
+
+        // First fetch data
         fetchMonthData(selectedMonth);
+
+        // Then set up real-time listener
+        const unsubscribe = onValue(billsRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const billsArray: MonthlyBill[] = Object.values(data);
+                billsArray.sort((a, b) => a.room_id - b.room_id);
+                setBills(billsArray);
+            }
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
     }, [selectedMonth, fetchMonthData]);
 
     return {
@@ -148,7 +167,13 @@ export function useMonthlyData() {
         setSelectedMonth,
         bills,
         loading,
-        updateBill,
+        updateBill: (id: number, updates: Partial<MonthlyBill>) => {
+            // Find the room_id from bills array (id was previously database id, now we use room_id)
+            const bill = bills.find(b => b.id === id || b.room_id === id);
+            if (bill) {
+                updateBill(bill.room_id, updates);
+            }
+        },
         updateAllRates,
         calculateBill
     };
