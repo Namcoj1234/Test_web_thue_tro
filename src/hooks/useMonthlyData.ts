@@ -43,10 +43,19 @@ export function useMonthlyData() {
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 const billsArray: MonthlyBill[] = Object.values(data);
-                billsArray.sort((a, b) => a.room_id - b.room_id);
-                setBills(billsArray);
-                setLoading(false);
-                return;
+
+                // Check if data is valid (must have at least 1 room with valid ID)
+                // If existing data consists of "undefined" rooms, we should treat it as non-existent and regenerate.
+                const isValid = billsArray.length > 0 && billsArray.every(b => b.room_id && b.room_id > 0);
+
+                if (isValid) {
+                    billsArray.sort((a, b) => (a.room_id || 0) - (b.room_id || 0));
+                    setBills(billsArray);
+                    setLoading(false);
+                    return;
+                }
+                console.warn('Found invalid/incomplete data for month, regenerating...', month);
+                // If invalid, fall through to regeneration logic below
             }
 
             // Auto-seed from previous month if no data exists
@@ -61,19 +70,30 @@ export function useMonthlyData() {
 
             if (prevSnapshot.exists()) {
                 const prevData = prevSnapshot.val();
-                Object.values(prevData).forEach((prev: any) => {
+                Object.entries(prevData).forEach(([key, prev]: [string, any]) => {
+                    // Robustly determine room_id
+                    let roomId = prev.room_id;
+                    if (!roomId && key.startsWith('room_')) {
+                        roomId = parseInt(key.replace('room_', ''));
+                    }
+                    if (!roomId) return; // Skip if can't determine room_id
+
                     const newBill: MonthlyBill = {
-                        room_id: prev.room_id,
+                        room_id: roomId,
                         month_key: month,
-                        occupants: prev.occupants,
-                        electricity_old: prev.electricity_new,
+                        occupants: prev.occupants ?? 0,
+                        // Fix for old electricity index: MUST take NEW index from previous month
+                        // If previous new is 0 (or missing), fallback to old, or 0.
+                        electricity_old: prev.electricity_new && prev.electricity_new > 0
+                            ? prev.electricity_new
+                            : (prev.electricity_old || 0),
                         electricity_new: 0,
                         electricity_rate: prev.electricity_rate ?? DEFAULT_ELECTRICITY_RATE,
                         water_rate: prev.water_rate ?? DEFAULT_WATER_RATE,
                         is_paid: false,
                         notes: null
                     };
-                    newBillsData[`room_${prev.room_id}`] = newBill;
+                    newBillsData[`room_${roomId}`] = newBill;
                 });
             } else {
                 // Create empty bills for all 4 rooms
@@ -92,9 +112,28 @@ export function useMonthlyData() {
                 });
             }
 
+            // If prevData existed but was empty/malformed, ensure we have at least 4 rooms
+            [1, 2, 3, 4].forEach(id => {
+                if (!newBillsData[`room_${id}`]) {
+                    newBillsData[`room_${id}`] = {
+                        room_id: id,
+                        month_key: month,
+                        occupants: 0,
+                        electricity_old: 0,
+                        electricity_new: 0,
+                        electricity_rate: DEFAULT_ELECTRICITY_RATE,
+                        water_rate: DEFAULT_WATER_RATE,
+                        is_paid: false,
+                        notes: null
+                    };
+                }
+            });
+
             // Save new bills to Firebase
             await set(ref(db, getBillsPath(month)), newBillsData);
 
+            // No need to setBills here because onValue listener will trigger consistently
+            // But we can do optimistic update if we want.
             const billsArray: MonthlyBill[] = Object.values(newBillsData);
             billsArray.sort((a, b) => a.room_id - b.room_id);
             setBills(billsArray);
