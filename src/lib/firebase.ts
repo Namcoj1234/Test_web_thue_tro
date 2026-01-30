@@ -1,15 +1,17 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, get, set, update, onValue, push, child } from 'firebase/database';
 
-// Firebase configuration - FREE TIER (no pause, no expiry)
+// Firebase configuration
+// In production (Vercel), these will be loaded from Environment Variables
+// For local development, you can create a .env.local file
 const firebaseConfig = {
-    apiKey: "AIzaSyDemo_ReplaceWithYourKey",
-    authDomain: "your-project-id.firebaseapp.com",
-    databaseURL: "https://your-project-id-default-rtdb.firebaseio.com",
-    projectId: "your-project-id",
-    storageBucket: "your-project-id.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef123456"
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDemo_ReplaceWithYourKey",
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "your-project-id.firebaseapp.com",
+    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || "https://your-project-id-default-rtdb.firebaseio.com",
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "your-project-id",
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "your-project-id.appspot.com",
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "123456789",
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:123456789:web:abcdef123456"
 };
 
 // Initialize Firebase
