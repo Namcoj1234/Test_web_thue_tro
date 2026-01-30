@@ -229,7 +229,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {bills.map((bill) => (
               <RoomCard
-                key={bill.id || bill.room_id}
+                key={`room-${bill.room_id}`}
                 billData={bill}
                 calculation={calculateBill(bill)}
                 onEdit={setSelectedBill}

@@ -121,6 +121,7 @@ export default function ImportPage() {
                         electricity_new: currentElec[roomId - 1],
                         electricity_rate: electricityRate,
                         water_rate: 80000,
+                        notes: null, // Fixed: Firebase doesn't accept undefined
                         is_paid: true,
                     };
                 }
@@ -191,8 +192,8 @@ export default function ImportPage() {
                     onClick={runImport}
                     disabled={importing}
                     className={`w-full py-3 px-6 rounded-xl font-bold text-white transition-all ${importing
-                            ? "bg-slate-400 cursor-not-allowed"
-                            : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg hover:shadow-xl"
+                        ? "bg-slate-400 cursor-not-allowed"
+                        : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg hover:shadow-xl"
                         }`}
                 >
                     {importing ? "Đang import..." : "🚀 Bắt đầu Import"}

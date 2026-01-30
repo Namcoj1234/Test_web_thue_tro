@@ -35,7 +35,7 @@ interface MonthlyBill {
     electricity_rate: number;
     water_rate: number;
     is_paid: boolean;
-    notes?: string;
+    notes?: string | null;
 }
 
 // Parse xlsx_data.json and extract bills
@@ -154,7 +154,7 @@ async function parseXlsxData(): Promise<MonthlyBill[]> {
                 electricity_rate: electricityRate,
                 water_rate: 80000,
                 is_paid: true,  // Historical data, assume paid
-                notes: undefined
+                notes: null // Fixed: Firebase doesn't accept undefined
             };
 
             bills.push(bill);

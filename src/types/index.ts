@@ -9,7 +9,7 @@ export interface MonthlyBill {
   electricity_rate?: number; // VND per kWh (default 5000)
   water_rate?: number; // VND per person (default 80000)
   is_paid?: boolean; // Payment status
-  notes?: string; // Landlord notes
+  notes?: string | null; // Landlord notes
   room_name?: string;
 }
 

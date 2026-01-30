@@ -71,7 +71,7 @@ export function useMonthlyData() {
                         electricity_rate: prev.electricity_rate ?? DEFAULT_ELECTRICITY_RATE,
                         water_rate: prev.water_rate ?? DEFAULT_WATER_RATE,
                         is_paid: false,
-                        notes: undefined
+                        notes: null
                     };
                     newBillsData[`room_${prev.room_id}`] = newBill;
                 });
@@ -87,7 +87,7 @@ export function useMonthlyData() {
                         electricity_rate: DEFAULT_ELECTRICITY_RATE,
                         water_rate: DEFAULT_WATER_RATE,
                         is_paid: false,
-                        notes: undefined
+                        notes: null
                     };
                 });
             }
@@ -126,7 +126,7 @@ export function useMonthlyData() {
 
         try {
             const billsRef = ref(db, getBillsPath(selectedMonth));
-            const updateData: Record<string, { electricity_rate: number; water_rate: number }> = {};
+            const updateData: Record<string, any> = {};
 
             bills.forEach(bill => {
                 updateData[`room_${bill.room_id}/electricity_rate`] = electricity_rate;
