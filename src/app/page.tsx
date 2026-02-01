@@ -5,7 +5,7 @@ import { useMonthlyData } from "@/hooks/useMonthlyData";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { RoomCard } from "@/components/RoomCard";
 import { RoomDetailModal } from "@/components/RoomDetailModal";
-import { MonthlyBill, DEFAULT_ELECTRICITY_RATE, DEFAULT_WATER_RATE } from "@/types";
+import { MonthlyBill, DEFAULT_ELECTRICITY_RATE, DEFAULT_WATER_RATE, DEFAULT_ROOM_RENT } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 import {
   TrendingUp, TrendingDown, AlertCircle, DollarSign, Zap, Users,
-  Droplets, Settings, Save, Calendar
+  Droplets, Settings, Save, Calendar, Home as HomeIcon
 } from "lucide-react";
 
 export default function Home() {
@@ -26,17 +26,19 @@ export default function Home() {
   // Settings state
   const [electricityRate, setElectricityRate] = useState(DEFAULT_ELECTRICITY_RATE);
   const [waterRate, setWaterRate] = useState(DEFAULT_WATER_RATE);
+  const [roomRent, setRoomRent] = useState(DEFAULT_ROOM_RENT);
 
   // Update rates when bills change
   useEffect(() => {
     if (bills.length > 0) {
       setElectricityRate(bills[0].electricity_rate ?? DEFAULT_ELECTRICITY_RATE);
       setWaterRate(bills[0].water_rate ?? DEFAULT_WATER_RATE);
+      setRoomRent(bills[0].room_rent ?? DEFAULT_ROOM_RENT);
     }
   }, [bills]);
 
   const handleSaveRates = () => {
-    updateAllRates(electricityRate, waterRate);
+    updateAllRates(electricityRate, waterRate, roomRent);
   };
 
   // Calculate stats
@@ -117,7 +119,7 @@ export default function Home() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
                   <Zap className="w-4 h-4 text-yellow-600" />
@@ -142,21 +144,35 @@ export default function Home() {
                   className="h-12 text-lg font-bold border-2 border-blue-300 focus:border-blue-500"
                 />
               </div>
-              <Button
-                onClick={handleSaveRates}
-                className="h-12 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold text-base shadow-lg"
-              >
-                <Save className="w-5 h-5 mr-2" />
-                Lưu cấu hình
-              </Button>
-              <Button
-                onClick={resetMonthData}
-                className="bg-red-100 hover:bg-red-200 text-red-700 ml-2"
-                variant="outline"
-                disabled={loading}
-              >
-                Reset Dữ liệu
-              </Button>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <HomeIcon className="w-4 h-4 text-purple-600" />
+                  Đơn giá Phòng (VNĐ/tháng)
+                </label>
+                <Input
+                  type="number"
+                  value={roomRent}
+                  onChange={(e) => setRoomRent(Number(e.target.value))}
+                  className="h-12 text-lg font-bold border-2 border-purple-300 focus:border-purple-500"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSaveRates}
+                  className="h-12 flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold text-base shadow-lg"
+                >
+                  <Save className="w-5 h-5 mr-2" />
+                  Lưu cấu hình
+                </Button>
+                <Button
+                  onClick={resetMonthData}
+                  className="h-12 bg-red-100 hover:bg-red-200 text-red-700"
+                  variant="outline"
+                  disabled={loading}
+                >
+                  Reset
+                </Button>
+              </div>
             </div>
             <p className="text-xs text-slate-700 mt-4 italic">
               💡 Thay đổi đơn giá sẽ áp dụng cho TẤT CẢ các phòng trong tháng này.

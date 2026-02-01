@@ -15,16 +15,16 @@ export function useMonthlyData() {
         const electricityUsage = Math.max(0, (bill.electricity_new ?? 0) - (bill.electricity_old ?? 0));
         const electricityRate = bill.electricity_rate ?? DEFAULT_ELECTRICITY_RATE;
         const waterRate = bill.water_rate ?? DEFAULT_WATER_RATE;
+        const roomRent = bill.room_rent ?? DEFAULT_ROOM_RENT; // Per room, not per person
 
         const electricityCost = electricityUsage * electricityRate;
         const waterCost = (bill.occupants ?? 0) * waterRate;
-        const roomRent = (bill.occupants ?? 0) * DEFAULT_ROOM_RENT;
 
         const totalBill = roomRent + waterCost + electricityCost;
 
         let perPerson = 0;
         if ((bill.occupants ?? 0) > 0) {
-            perPerson = (DEFAULT_ROOM_RENT + waterRate) + (electricityCost / bill.occupants!);
+            perPerson = totalBill / bill.occupants!;
         }
 
         return {
@@ -93,6 +93,7 @@ export function useMonthlyData() {
                         electricity_new: 0,
                         electricity_rate: prev.electricity_rate ?? DEFAULT_ELECTRICITY_RATE,
                         water_rate: prev.water_rate ?? DEFAULT_WATER_RATE,
+                        room_rent: prev.room_rent ?? DEFAULT_ROOM_RENT,
                         is_paid: false,
                         notes: null
                     };
@@ -109,6 +110,7 @@ export function useMonthlyData() {
                         electricity_new: 0,
                         electricity_rate: DEFAULT_ELECTRICITY_RATE,
                         water_rate: DEFAULT_WATER_RATE,
+                        room_rent: DEFAULT_ROOM_RENT,
                         is_paid: false,
                         notes: null
                     };
@@ -126,6 +128,7 @@ export function useMonthlyData() {
                         electricity_new: 0,
                         electricity_rate: DEFAULT_ELECTRICITY_RATE,
                         water_rate: DEFAULT_WATER_RATE,
+                        room_rent: DEFAULT_ROOM_RENT,
                         is_paid: false,
                         notes: null
                     };
@@ -154,6 +157,16 @@ export function useMonthlyData() {
 
         try {
             const billRef = ref(db, getBillPath(selectedMonth, roomId));
+
+            // Calculate and save the bill totals
+            const bill = bills.find(b => b.room_id === roomId);
+            if (bill) {
+                const updatedBill = { ...bill, ...updates };
+                const calc = calculateBill(updatedBill);
+                updates.calculated_total = calc.totalBill;
+                updates.calculated_per_person = calc.perPerson;
+            }
+
             await update(billRef, updates);
         } catch (error) {
             console.error('Update failed:', error);
@@ -161,9 +174,9 @@ export function useMonthlyData() {
         }
     };
 
-    const updateAllRates = async (electricity_rate: number, water_rate: number) => {
+    const updateAllRates = async (electricity_rate: number, water_rate: number, room_rent: number) => {
         // Optimistic update
-        const updates = bills.map(b => ({ ...b, electricity_rate, water_rate }));
+        const updates = bills.map(b => ({ ...b, electricity_rate, water_rate, room_rent }));
         setBills(updates);
 
         try {
@@ -173,6 +186,13 @@ export function useMonthlyData() {
             bills.forEach(bill => {
                 updateData[`room_${bill.room_id}/electricity_rate`] = electricity_rate;
                 updateData[`room_${bill.room_id}/water_rate`] = water_rate;
+                updateData[`room_${bill.room_id}/room_rent`] = room_rent;
+
+                // Recalculate and save bill totals
+                const updatedBill = { ...bill, electricity_rate, water_rate, room_rent };
+                const calc = calculateBill(updatedBill);
+                updateData[`room_${bill.room_id}/calculated_total`] = calc.totalBill;
+                updateData[`room_${bill.room_id}/calculated_per_person`] = calc.perPerson;
             });
 
             await update(billsRef, updateData);
