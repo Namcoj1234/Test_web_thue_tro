@@ -81,16 +81,22 @@ export function useMonthlyData() {
                     }
                     if (!roomId) return; // Skip if can't determine room_id
 
+                    // electricity_old = electricity_new của tháng trước (đã fix)
+                    const elecOld = prev.electricity_new != null
+                        ? prev.electricity_new
+                        : (prev.electricity_old ?? 0);
+
+                    // Nếu phòng trống (0 người): giữ nguyên chỉ số đồng hồ (old = new)
+                    // vì không ai dùng điện → không reset về 0 gây hiểu lầm
+                    const isEmptyRoom = (prev.occupants ?? 0) === 0;
+                    const elecNew = isEmptyRoom ? elecOld : 0;
+
                     const newBill: MonthlyBill = {
                         room_id: roomId,
                         month_key: month,
                         occupants: prev.occupants ?? 0,
-                        // Fix for old electricity index: MUST take NEW index from previous month
-                        // If previous new is 0 (or missing), fallback to old, or 0.
-                        electricity_old: prev.electricity_new && prev.electricity_new > 0
-                            ? prev.electricity_new
-                            : (prev.electricity_old || 0),
-                        electricity_new: 0,
+                        electricity_old: elecOld,
+                        electricity_new: elecNew,
                         electricity_rate: prev.electricity_rate ?? DEFAULT_ELECTRICITY_RATE,
                         water_rate: prev.water_rate ?? DEFAULT_WATER_RATE,
                         room_rent: prev.room_rent ?? DEFAULT_ROOM_RENT,
